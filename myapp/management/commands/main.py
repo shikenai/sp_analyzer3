@@ -3,10 +3,17 @@ import pandas as pd
 import ssl
 from myapp.models import Brands
 from more_itertools import chunked
+import os
 
 
 def test():
-    print('regi trades')
+
+    folder_path = os.path.join(os.getcwd(), 'data', 'base')
+    file_list = []
+    for file_name in os.listdir(folder_path):
+        if 'split' in file_name:
+            file_list.append(file_name)
+    print(file_list)
 
 
 def register_brands_from_tse():

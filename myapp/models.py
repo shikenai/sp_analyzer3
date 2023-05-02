@@ -8,3 +8,16 @@ class Brands(models.Model):
 
     def __str__(self):
         return '【' + self.code + '】' + self.name
+
+
+class Trades(models.Model):
+    brand = models.ForeignKey(to=Brands, on_delete=models.CASCADE)
+    Date = models.DateField(blank=True, null=True)
+    Close = models.FloatField(verbose_name='終値', blank=True, null=True)
+    High = models.FloatField(verbose_name='高値', blank=True, null=True)
+    Low = models.FloatField(verbose_name='安値', blank=True, null=True)
+    Open = models.FloatField(verbose_name='始値', blank=True, null=True)
+    Volume = models.FloatField(verbose_name='出来高', blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.brand} {self.Date.strftime("%Y年%m月%d日")}'
