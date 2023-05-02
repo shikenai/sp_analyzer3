@@ -5,6 +5,11 @@ const registerBrands=()=>{
     console.log("registerBrands!")
   })
 }
+const registerTrades=()=>{
+  axios.get('api/register_trades.json').then(res=>{
+    console.log('registerTrades!')
+  })
+}
 </script>
 
 <template>
@@ -12,8 +17,8 @@ const registerBrands=()=>{
     <nav>
       <ul>
         <li><a href="http://localhost:8000/admin/">管理画面</a></li>
-        <li><a href="" @click.prevent="registerBrands">registerBrands</a></li>
-        <li><a href="">test2</a></li>
+        <li><a href="" @click.prevent="registerBrands">regB</a></li>
+        <li><a href="" @click.prevent="registerTrades">regT</a></li>
         <li><a href="">test3</a></li>
       </ul>
     </nav>

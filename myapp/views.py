@@ -9,5 +9,10 @@ def register_brands(request):
     return JsonResponse({'user': 'taro'})
 
 
+def register_trades(request):
+    main.test()
+    return JsonResponse({'kind': 'trade'})
+
+
 def home(request):
     return redirect("http://localhost:5173/")
