@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from myapp.management.commands import main
+import datetime as dt
 
 
 def register_brands(request):
@@ -10,7 +11,11 @@ def register_brands(request):
 
 
 def register_trades(request):
-    main.test()
+    t = dt.datetime.now()
+    main.register_trades()
+    elapsed_time = dt.datetime.now() - t
+    minutes, seconds = divmod(elapsed_time.total_seconds(), 60)
+    print(f"{minutes:.0f}分{seconds:.0f}秒")
     return JsonResponse({'kind': 'trade'})
 
 

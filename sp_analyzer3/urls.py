@@ -22,4 +22,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/register_brands.json", views.register_brands),
     path("api/register_trades.json", views.register_trades),
+    path("", views.home),
 ]

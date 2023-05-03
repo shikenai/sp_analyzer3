@@ -10,6 +10,7 @@ const registerTrades=()=>{
     console.log('registerTrades!')
   })
 }
+
 </script>
 
 <template>
@@ -18,7 +19,7 @@ const registerTrades=()=>{
       <ul>
         <li><a href="http://localhost:8000/admin/">管理画面</a></li>
 <!--        <li><a href="" @click.prevent="registerBrands">regB</a></li>-->
-        <li><a href="" @click.prevent="registerTrades">regT</a></li>
+<!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
         <li><a href="">test3</a></li>
       </ul>
     </nav>
