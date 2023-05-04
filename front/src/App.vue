@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from "axios";
-import {reactive} from "vue";
+import {ref, reactive} from "vue";
 
 const registerBrands = () => {
   axios.get('/api/register_brands.json').then(res => {
@@ -22,18 +22,18 @@ const analyze = () => {
     console.log('analyze')
   })
 }
-const show =()=>{
-  axios.get('api/show.json').then(res =>{
+const hoge = ref("tyy")
+const show = () => {
+  axios.get('api/show.json').then(res => {
     console.log('show')
     console.log(res.data.zero)
     console.log(res.data.p1)
     console.log(res.data.p2)
     console.log(res.data.m1)
     console.log(res.data.m2)
+    hoge.value = 'wei'
   })
 }
-
-
 
 </script>
 
@@ -53,14 +53,14 @@ const show =()=>{
       <div id="left">
         <ul>
           <li v-for="p in p2">
-            {{p}}
+            {{ p }}
           </li>
         </ul>
       </div>
       <div id="main">
 
       </div>
-<!--      <img src="/src/assets/img/0【9989.jp  サンドラッグ】(0;82).png" alt="" height="500" width="900">-->
+      <!--      <img src="/src/assets/img/0【9989.jp  サンドラッグ】(0;82).png" alt="" height="500" width="900">-->
     </div>
   </div>
 </template>
@@ -112,7 +112,8 @@ nav ul li a:hover {
   border: blueviolet solid 3px;
   float: left;
 }
-#main{
+
+#main {
   width: 1025px;
   height: 490px;
   border: #E7DA66 solid 2px;
