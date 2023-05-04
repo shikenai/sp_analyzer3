@@ -47,7 +47,10 @@ def show():
                     df_m1 = pd.concat([df_m1, temp_df])
                 elif sign == '-2':
                     df_m2 = pd.concat([df_m2, temp_df])
-
+    df_p2 = df_p2.sort_values('rsi')
+    df_p1 = df_p1.sort_values('rsi')
+    df_m2 = df_m2.sort_values('rsi', ascending=False)
+    df_m1 = df_m1.sort_values('rsi', ascending=False)
     return df_zero, df_p1, df_p2, df_m1, df_m2
 
 

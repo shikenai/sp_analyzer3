@@ -22,16 +22,25 @@ const analyze = () => {
     console.log('analyze')
   })
 }
-const hoge = ref("tyy")
+const zero = ref("")
+const p2 = ref('')
+const p1 = ref('')
+const m2 = ref('')
+const m1 = ref('')
 const show = () => {
   axios.get('api/show.json').then(res => {
     console.log('show')
-    console.log(res.data.zero)
-    console.log(res.data.p1)
-    console.log(res.data.p2)
-    console.log(res.data.m1)
-    console.log(res.data.m2)
-    hoge.value = 'wei'
+    // console.log(res.data.zero)
+    // console.log(res.data.p1)
+    // console.log(res.data.p2)
+    // console.log(res.data.m1)
+    // console.log(res.data.m2)
+    zero.value = JSON.parse(res.data.zero)
+    p2.value = JSON.parse(res.data.p2)
+    p1.value = JSON.parse(res.data.p1)
+    m2.value = JSON.parse(res.data.m2)
+    m1.value = JSON.parse(res.data.m1)
+    console.log(p2.value)
   })
 }
 
@@ -51,10 +60,25 @@ const show = () => {
     </nav>
     <div id="contents">
       <div id="left">
+        <p>p2</p>
         <ul>
-          <li v-for="p in p2">
-            {{ p }}
-          </li>
+          <li v-for="p in p2"><a href="">{{p.rsi}} : {{p.brand}}</a></li>
+        </ul>
+        <p>p1</p>
+        <ul>
+          <li v-for="p in p1">{{p.rsi}} : {{p.brand}}</li>
+        </ul>
+        <p>m2</p>
+        <ul>
+          <li v-for="p in m2">{{p.rsi}} : {{p.brand}}</li>
+        </ul>
+        <p>m1</p>
+        <ul>
+          <li v-for="p in m1">{{p.rsi}} : {{p.brand}}</li>
+        </ul>
+        <p>zero</p>
+        <ul>
+          <li v-for="p in zero">{{p.rsi}} : {{p.brand}}</li>
         </ul>
       </div>
       <div id="main">
@@ -107,14 +131,16 @@ nav ul li a:hover {
 }
 
 #left {
-  width: 90px;
+  width: 165px;
   height: 490px;
   border: blueviolet solid 3px;
   float: left;
+  overflow-x: scroll;
+  white-space: nowrap;
 }
 
 #main {
-  width: 1025px;
+  width: 950px;
   height: 490px;
   border: #E7DA66 solid 2px;
 }
