@@ -81,7 +81,7 @@ def plot_img(df):
     # 全体のスタイル
     mc = mpf.make_marketcolors(up='#049DBF', down='#D93D4A',
                                edge='#F2CED1', wick={'up': '#049DBF', 'down': '#D93D4A'})
-    cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray")
+    cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray", rc={"font.family": plt.rcParams["font.family"][0]})
     mpf.plot(df, type='candle', addplot=adp,
              fill_between=dict(y1=df['span1'].values, y2=df['span2'].values, alpha=0.2, color='gray'), figsize=(19, 12),
              style=cs, savefig=full_filename, panel_ratios=(3, 1, 1, 1), title=title)
