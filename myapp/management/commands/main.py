@@ -14,6 +14,43 @@ import datetime as dt
 import japanize_matplotlib
 
 
+def show():
+    folder_path = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img')
+    col_list = ['sign', 'rsi', 'brand', 'filename']
+    df_zero = pd.DataFrame(columns=col_list)
+    df_p1 = pd.DataFrame(columns=col_list)
+    df_p2 = pd.DataFrame(columns=col_list)
+    df_m1 = pd.DataFrame(columns=col_list)
+    df_m2 = pd.DataFrame(columns=col_list)
+
+    for filename in os.listdir(folder_path):
+        if os.path.isfile(os.path.join(folder_path, filename)):
+            if not filename[0] == '.':
+                i1 = filename.index('【')
+                i2 = filename.index('】')
+                i3 = filename.index('(')
+                i4 = filename.index(';')
+                i5 = filename.index(')')
+                brand = filename[i1 + 1:i2]
+                sign = filename[i3 + 1:i4]
+                rsi = filename[i4 + 1:i5]
+                new_row = [[sign, rsi, brand, filename]]
+                temp_df = pd.DataFrame(new_row, columns=col_list)
+
+                if sign == '0':
+                    df_zero = pd.concat([df_zero, temp_df])
+                elif sign == '1':
+                    df_p1 = pd.concat([df_p1, temp_df])
+                elif sign == '2':
+                    df_p2 = pd.concat([df_p2, temp_df])
+                elif sign == '-1':
+                    df_m1 = pd.concat([df_m1, temp_df])
+                elif sign == '-2':
+                    df_m2 = pd.concat([df_m2, temp_df])
+
+    return df_zero, df_p1, df_p2, df_m1, df_m2
+
+
 def analyze():
     t = dt.datetime.now()
     erazer()
@@ -22,7 +59,7 @@ def analyze():
 
     list_brands_id = brands.values_list('id', flat=True)
     df = pd.DataFrame.from_records(trades.values())
-    list_brands_id = list_brands_id[:1]
+    # list_brands_id = list_brands_id[:1]
     for i in list_brands_id:
         extracted_df = df[df['brand_id'] == i]
         extracted_df = extracted_df.sort_values('Date', ascending=True)
@@ -41,16 +78,17 @@ def analyze():
     minutes, seconds = divmod(elapsed_time.total_seconds(), 60)
     print(f"{minutes:.0f}分{seconds:.0f}秒")
 
+
 def plot_img(df):
     # 銘柄情報を取得
-    filepath = os.path.join(os.getcwd(), 'data', 'img')
+    filepath = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img')
     brand = Brands.objects.get(id=df['brand_id'][0])
-    filename_head = f'【{brand.code}  {brand.name}】'
-    filename_tail = f'({df["sign"][-1]};{df["rsi"][-1]}).png'
+    filename_head = f'{df["sign"][-1]}【{brand.code}  {brand.name}】'
+    filename_tail = f'({df["sign"][-1]};{int(df["rsi"][-1])}).png'
     full_filename = os.path.join(filepath, filename_head + filename_tail)
-    title = brand.code + '  ' + brand.name + '  ' + brand.division
+    title = df["sign"][-1] + '  ' + brand.code + '  ' + brand.name + '  ' + brand.division
     print(full_filename)
-    print(df.columns)
+    # print(df.columns)
     # 直近の最高値、最安値
     df["h_line"] = df["High"].rolling(20, min_periods=1).max()
     df["l_line"] = df["Low"].rolling(20, min_periods=1).min()
@@ -100,6 +138,8 @@ def add_stochastic(df, term=14):
     # stochastic['DL'] = 20
     df = pd.concat([df, stochastic], axis=1)
     return df
+
+
 def add_bb(df, bb_period=20, bb_dev=2):
     # ボリンジャーバンドの計算
     rolling_mean = df['Close'].rolling(bb_period).mean()
@@ -343,7 +383,7 @@ def register_brands_from_tse():
 
 
 def erazer():
-    folder_path = os.path.join(os.getcwd(), 'data', 'img')  # フォルダのパスを設定
+    folder_path = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img')  # フォルダのパスを設定
 
     for file_name in os.listdir(folder_path):  # フォルダ内のファイル名を取得
         file_path = os.path.join(folder_path, file_name)  # ファイルのパスを設定

@@ -5,6 +5,19 @@ from myapp.management.commands import main
 import datetime as dt
 
 
+def show(request):
+    df_zero, df_p1, df_p2, df_m1, df_m2 = main.show()
+    zero = df_zero.to_json(orient='records')
+    p1 = df_p1.to_json(orient='records')
+    p2 = df_p2.to_json(orient='records')
+    m1 = df_m1.to_json(orient='records')
+    m2 = df_m2.to_json(orient='records')
+    return JsonResponse({'zero': zero,
+                         'p1': p1,
+                         'p2': p2,
+                         'm1': m1,
+                         'm2': m2})
+
 def analyze(request):
     main.analyze()
     return JsonResponse({'ana': 'lyze'})
