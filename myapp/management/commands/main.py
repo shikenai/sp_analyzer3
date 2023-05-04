@@ -4,7 +4,69 @@ import ssl
 from myapp.models import Brands, Trades
 from more_itertools import chunked
 import os
+import requests
+from bs4 import BeautifulSoup
+import time
 
+
+
+# ---------------【ココカラ】ネットから当日の取引データを登録-------------------
+def get_new_trades():
+    _df = pd.read_csv(os.path.join(os.getcwd(), 'data', 'base', 'test.csv'))
+    brands_list = list(_df['コード'].astype('str'))
+    # brands_list = brands_list[:3]
+    df = pd.DataFrame(columns=["Date", "Close", "High", "Low", "Open", "Volume", "brand"])
+    for b in brands_list:
+        url = "https://kabutan.jp/stock/?code=" + b
+        res = requests.get(url)
+        doc = BeautifulSoup(res.text, 'html.parser')
+        el = doc.select("#kobetsu_left tr")
+        time_elapsed = res.elapsed.total_seconds()
+        print(b)
+        print('time_elapsed:', time_elapsed)
+        _brand = Brands.objects.filter(code=str(b)+'.jp').first()
+        time_tags = doc.find_all('time')
+        datetimes = [tag['datetime'] for tag in time_tags]
+        if 'T' in datetimes[7]:
+            _date = datetimes[7].split('T')[0]
+        else:
+            _date = datetimes[7]
+        if el is not None:
+            open = float(el[0].select('td')[0].getText().replace(',', ''))
+            high = float(el[1].select('td')[0].getText().replace(',', ''))
+            low = float(el[2].select('td')[0].getText().replace(',', ''))
+            close = float(el[3].select('td')[0].getText().replace(',', ''))
+            volume = int(el[4].select('td')[0].getText().replace(',', '')[: -2])
+
+        new_list = [_date, close, high, low, open, volume, _brand]
+
+        df.loc[len(df)] = pd.Series(new_list, index=df.columns)
+
+        time.sleep(5)
+    df = df.astype({'Close': float, 'High': float, 'Open': float, 'Low': float, 'Volume': float})
+    df['Date'] = pd.to_datetime(df['Date']).dt.date
+    df.to_csv(os.path.join(os.getcwd(),'data','new_trades', f'{df["Date"][0].strftime("%Y%m%d")}_new_trades.csv'))
+    df_records = df.to_dict(orient='records')
+    model_inserts = []
+    print(df_records)
+    for i in range(len(df_records)):
+        t_date = df_records[i]['Date']
+        t_brand = df_records[i]['brand']
+        _trades = Trades.objects.filter(Date=t_date, brand=t_brand)
+        if not _trades.exists():
+            model_inserts.append(Trades(
+                Date=df_records[i]['Date'],
+                Close=df_records[i]['Close'],
+                High=df_records[i]['High'],
+                Low=df_records[i]['Low'],
+                Open=df_records[i]['Open'],
+                Volume=df_records[i]['Volume'],
+                brand=df_records[i]['brand'],
+            ))
+    print(model_inserts)
+    Trades.objects.bulk_create(model_inserts)
+# ---------------【ココマデ】ネットから当日の取引データを登録-------------------
+# ---------------【ココカラ】CSVから取引データを登録-------------------
 
 def register_trades():
     file_list = get_topix_files()
@@ -62,6 +124,8 @@ def get_topix_files():
             file_list.append(os.path.join(folder_path, file_name))
     return file_list
 
+
+# ---------------【ココマデ】CSVから取引データを登録-------------------
 
 def register_brands_from_tse():
     # urlに記載されているエクセルファイルから、TOPIX Core30, Large70, Mid400　選定銘柄を選出し、モデル登録。

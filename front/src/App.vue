@@ -10,6 +10,11 @@ const registerTrades=()=>{
     console.log('registerTrades!')
   })
 }
+const getNewTrades=()=>{
+  axios.get('api/get_new_trades.json').then(res=>{
+    console.log('get new trades')
+  })
+}
 
 </script>
 
@@ -20,7 +25,7 @@ const registerTrades=()=>{
         <li><a href="http://localhost:8000/admin/">管理画面</a></li>
 <!--        <li><a href="" @click.prevent="registerBrands">regB</a></li>-->
 <!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
-        <li><a href="">test3</a></li>
+        <li><a href="" @click.prevent="getNewTrades">get new Trades</a></li>
       </ul>
     </nav>
     <div id="contents">

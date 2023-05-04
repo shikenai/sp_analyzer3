@@ -5,6 +5,11 @@ from myapp.management.commands import main
 import datetime as dt
 
 
+def get_new_trades(request):
+    main.get_new_trades()
+    return JsonResponse({'new': 'trades'})
+
+
 def register_brands(request):
     main.register_brands_from_tse()
     return JsonResponse({'user': 'taro'})
