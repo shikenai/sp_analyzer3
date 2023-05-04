@@ -10,9 +10,12 @@ import time
 import numpy as np
 import mplfinance as mpf
 import matplotlib.pyplot as plt
+import datetime as dt
+import japanize_matplotlib
 
 
 def analyze():
+    t = dt.datetime.now()
     erazer()
     trades = Trades.objects.all()
     brands = Brands.objects.all()
@@ -27,27 +30,53 @@ def analyze():
         extracted_df = add_ma(extracted_df, 'Close')
         extracted_df = add_macd(extracted_df)
         extracted_df = add_rsi(extracted_df)
+        extracted_df = add_stochastic(extracted_df)
         extracted_df = add_ichimoku(extracted_df)
         pd.set_option('display.max_rows', extracted_df.shape[0])
         pd.set_option('display.max_columns', extracted_df.shape[1])
         extracted_df.index = pd.to_datetime(extracted_df['Date'], format='mixed')
         extracted_df = extracted_df.dropna()
         plot_img(extracted_df)
-
+    elapsed_time = dt.datetime.now() - t
+    minutes, seconds = divmod(elapsed_time.total_seconds(), 60)
+    print(f"{minutes:.0f}分{seconds:.0f}秒")
 
 def plot_img(df):
     # 銘柄情報を取得
     filepath = os.path.join(os.getcwd(), 'data', 'img')
     brand = Brands.objects.get(id=df['brand_id'][0])
     filename_head = f'【{brand.code}  {brand.name}】'
-    print(filename_head)
     filename_tail = f'({df["sign"][-1]};{df["rsi"][-1]}).png'
     full_filename = os.path.join(filepath, filename_head + filename_tail)
-
+    title = brand.code + '  ' + brand.name + '  ' + brand.division
+    print(full_filename)
+    print(df.columns)
     # 直近の最高値、最安値
     df["h_line"] = df["High"].rolling(20, min_periods=1).max()
     df["l_line"] = df["Low"].rolling(20, min_periods=1).min()
     adp = [mpf.make_addplot(df[['h_line', 'l_line']], type='step', alpha=0.2, panel=0)]
+
+    # 移動平均とBBの設定（パネル０に描画するもの）
+    column_list = df.columns
+    ma_bb_columns = [c for c in column_list if 'ma' in c or 'band' in c]
+    for c in ma_bb_columns:
+        if 'ma' in c and 'macd' not in c:
+            adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle='--', alpha=0.7))
+        elif 'band' in c:
+            adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle=':', alpha=0.5))
+
+    # macdの描画
+    adp.append(mpf.make_addplot(df['macd'], type='line', panel=1, color='green'))
+    adp.append(mpf.make_addplot(df['macd_signal'], type='line', panel=1, color='blue'))
+    adp.append(mpf.make_addplot(df['hist'], type='bar', panel=1, color='red'))
+    adp.append(mpf.make_addplot(df['hist_diff_3mean'], type='bar', panel=1, color='yellow', alpha=0.6))
+    adp.append(mpf.make_addplot(df['sign'], type='line', panel=1, color='gray'))
+
+    # RSI
+    adp.append(mpf.make_addplot(df[['rsi', 'UL', 'DL']], ylim=[0, 100], panel=2))
+
+    # stocha
+    adp.append(mpf.make_addplot(df[['%D', '%SD', 'UL', 'DL']], ylim=[0, 100], panel=3))
 
     # 全体のスタイル
     mc = mpf.make_marketcolors(up='#049DBF', down='#D93D4A',
@@ -55,13 +84,22 @@ def plot_img(df):
     cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray")
     mpf.plot(df, type='candle', addplot=adp,
              fill_between=dict(y1=df['span1'].values, y2=df['span2'].values, alpha=0.2, color='gray'), figsize=(19, 12),
-             style=cs, savefig=full_filename)
-    plt.show()
+             style=cs, savefig=full_filename, panel_ratios=(3, 1, 1, 1), title=title)
     plt.clf()
     plt.close()
 
 
 # ============【ココカラ】dfに移動平均等を追加する===============
+def add_stochastic(df, term=14):
+    stochastic = pd.DataFrame()
+    stochastic['%K'] = ((df['Close'] - df['Low'].rolling(term).min())
+                        / (df['High'].rolling(term).max() - df['Low'].rolling(term).min())) * 100
+    stochastic['%D'] = stochastic['%K'].rolling(3).mean()
+    stochastic['%SD'] = stochastic['%D'].rolling(3).mean()
+    # stochastic['UL'] = 80
+    # stochastic['DL'] = 20
+    df = pd.concat([df, stochastic], axis=1)
+    return df
 def add_bb(df, bb_period=20, bb_dev=2):
     # ボリンジャーバンドの計算
     rolling_mean = df['Close'].rolling(bb_period).mean()
@@ -87,8 +125,8 @@ def add_macd(df):
     macd = ema12 - ema26
     signal = macd.ewm(span=9, adjust=False).mean()
     hist = macd - signal
-    # macd_df = pd.DataFrame({'macd': macd, 'macd_signal': signal, 'hist': hist})
-    macd_df = pd.DataFrame({'hist': hist})
+    macd_df = pd.DataFrame({'macd': macd, 'macd_signal': signal, 'hist': hist})
+    # macd_df = pd.DataFrame({'hist': hist})
     macd_df['hist_diff'] = macd_df['hist'].diff()
     macd_df['hist_diff_3mean'] = macd_df['hist'].diff().rolling(3).mean()
     macd_df['t'] = macd_df['hist_diff_3mean'].apply(sign_func)
@@ -100,7 +138,7 @@ def add_macd(df):
     macd_df.loc[(macd_df['hist_posi'] == 1) & (macd_df['t_shift'] == 1) & (macd_df['t'] == -1), 'sign'] = -2
     macd_df.loc[(macd_df['hist_posi'] == 1) & (macd_df['t_shift'] == -1) & (macd_df['t'] == -1), 'sign'] = -1
 
-    macd_df = macd_df.drop(['t', 't_shift', 'hist_diff', 'hist_diff_3mean', 'hist_posi'], axis=1)
+    macd_df = macd_df.drop(['t', 't_shift', 'hist_diff', 'hist_posi'], axis=1)
     # print(macd_df[['hist', 'hist_posi', 'hist_diff_3mean', 't', 't_shift', '_sign']])
     df = pd.concat([df, macd_df], axis=1)
     return df
