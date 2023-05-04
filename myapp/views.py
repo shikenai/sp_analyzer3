@@ -5,6 +5,10 @@ from myapp.management.commands import main
 import datetime as dt
 
 
+def analyze(request):
+    main.analyze()
+    return JsonResponse({'ana': 'lyze'})
+
 def get_new_trades(request):
     main.get_new_trades()
     return JsonResponse({'new': 'trades'})

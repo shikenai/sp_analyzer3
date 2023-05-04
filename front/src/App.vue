@@ -15,6 +15,11 @@ const getNewTrades=()=>{
     console.log('get new trades')
   })
 }
+const analyze=()=>{
+  axios.get('api/analyze.json').then(res=>{
+    console.log('analyze')
+  })
+}
 
 </script>
 
@@ -25,7 +30,8 @@ const getNewTrades=()=>{
         <li><a href="http://localhost:8000/admin/">管理画面</a></li>
 <!--        <li><a href="" @click.prevent="registerBrands">regB</a></li>-->
 <!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
-        <li><a href="" @click.prevent="getNewTrades">get new Trades</a></li>
+        <li><a href="" @click.prevent="getNewTrades">get dayly Trades</a></li>
+        <li><a href="" @click.prevent="analyze">analyze</a></li>
       </ul>
     </nav>
     <div id="contents">
