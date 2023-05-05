@@ -22,6 +22,7 @@ def show():
     df_p2 = pd.DataFrame(columns=col_list)
     df_m1 = pd.DataFrame(columns=col_list)
     df_m2 = pd.DataFrame(columns=col_list)
+    link_path = '/src/assets/img/'
 
     for filename in os.listdir(folder_path):
         if os.path.isfile(os.path.join(folder_path, filename)):
@@ -34,7 +35,7 @@ def show():
                 brand = filename[i1 + 1:i2]
                 sign = filename[i3 + 1:i4]
                 rsi = filename[i4 + 1:i5]
-                new_row = [[sign, rsi, brand, filename]]
+                new_row = [[sign, rsi, brand,link_path + filename]]
                 temp_df = pd.DataFrame(new_row, columns=col_list)
 
                 if sign == '0':
@@ -47,6 +48,7 @@ def show():
                     df_m1 = pd.concat([df_m1, temp_df])
                 elif sign == '-2':
                     df_m2 = pd.concat([df_m2, temp_df])
+    df_zero = df_zero.sort_values('rsi')
     df_p2 = df_p2.sort_values('rsi')
     df_p1 = df_p1.sort_values('rsi')
     df_m2 = df_m2.sort_values('rsi', ascending=False)
@@ -89,7 +91,7 @@ def plot_img(df):
     filename_head = f'{df["sign"][-1]}【{brand.code}  {brand.name}】'
     filename_tail = f'({df["sign"][-1]};{int(df["rsi"][-1])}).png'
     full_filename = os.path.join(filepath, filename_head + filename_tail)
-    title = df["sign"][-1] + '  ' + brand.code + '  ' + brand.name + '  ' + brand.division
+    title = str(df["sign"][-1]) + '  ' + brand.code + '  ' + brand.name + '  ' + brand.division
     print(full_filename)
     # print(df.columns)
     # 直近の最高値、最安値
@@ -110,7 +112,7 @@ def plot_img(df):
     adp.append(mpf.make_addplot(df['macd'], type='line', panel=1, color='green'))
     adp.append(mpf.make_addplot(df['macd_signal'], type='line', panel=1, color='blue'))
     adp.append(mpf.make_addplot(df['hist'], type='bar', panel=1, color='red'))
-    adp.append(mpf.make_addplot(df['hist_diff_3mean'], type='bar', panel=1, color='yellow', alpha=0.6))
+    adp.append(mpf.make_addplot(df['hist_diff_3mean'], type='line', panel=1, color='yellow', alpha=0.6))
     adp.append(mpf.make_addplot(df['sign'], type='line', panel=1, color='gray'))
 
     # RSI
@@ -125,7 +127,7 @@ def plot_img(df):
     cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray", rc={"font.family": plt.rcParams["font.family"][0]})
     mpf.plot(df, type='candle', addplot=adp,
              fill_between=dict(y1=df['span1'].values, y2=df['span2'].values, alpha=0.2, color='gray'), figsize=(19, 12),
-             style=cs, savefig=full_filename, panel_ratios=(3, 1, 1, 1), title=title)
+             style=cs, savefig=full_filename, panel_ratios=(3, 1, 1, 1), title=title, tight_layout=True)
     plt.clf()
     plt.close()
 

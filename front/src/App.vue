@@ -27,14 +27,13 @@ const p2 = ref('')
 const p1 = ref('')
 const m2 = ref('')
 const m1 = ref('')
+
+const img = ref('')
+
+const brand_code = ref('')
+const brand_name = ref('')
 const show = () => {
   axios.get('api/show.json').then(res => {
-    console.log('show')
-    // console.log(res.data.zero)
-    // console.log(res.data.p1)
-    // console.log(res.data.p2)
-    // console.log(res.data.m1)
-    // console.log(res.data.m2)
     zero.value = JSON.parse(res.data.zero)
     p2.value = JSON.parse(res.data.p2)
     p1.value = JSON.parse(res.data.p1)
@@ -43,7 +42,16 @@ const show = () => {
     console.log(p2.value)
   })
 }
-
+const drawing =(url)=>{
+  console.log('drawing')
+  console.log(url)
+  img.value = url
+  const index = url.indexOf('【')
+  brand_code.value = url.slice(index+1, index+8)
+  console.log(brand_code.value)
+  brand_name.value = url.slice(index+10, url.indexOf('】'))
+  console.log(brand_name.value)
+}
 </script>
 
 <template>
@@ -53,38 +61,40 @@ const show = () => {
         <li><a href="http://localhost:8000/admin/">管理画面</a></li>
         <!--        <li><a href="" @click.prevent="registerBrands">regB</a></li>-->
         <!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
-        <li><a href="" @click.prevent="getNewTrades">get daily Trades</a></li>
-        <li><a href="" @click.prevent="analyze">analyze</a></li>
-        <li><a href="" @click.prevent="show">show</a></li>
+        <li><a href="" @click.prevent="getNewTrades">最新の取引情報を取得</a></li>
+        <li><a href="" @click.prevent="analyze">画像生成</a></li>
+        <li><a href="" @click.prevent="show">画像表示</a></li>
       </ul>
     </nav>
     <div id="contents">
       <div id="left">
         <p>p2</p>
         <ul>
-          <li v-for="p in p2"><a href="">{{p.rsi}} : {{p.brand}}</a></li>
+          <li v-for="p in p2"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{p.rsi}} : {{p.brand}}</a></li>
         </ul>
         <p>p1</p>
         <ul>
-          <li v-for="p in p1">{{p.rsi}} : {{p.brand}}</li>
+          <li v-for="p in p1"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{p.rsi}} : {{p.brand}}</a></li>
         </ul>
         <p>m2</p>
         <ul>
-          <li v-for="p in m2">{{p.rsi}} : {{p.brand}}</li>
+          <li v-for="p in m2"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{p.rsi}} : {{p.brand}}</a></li>
         </ul>
         <p>m1</p>
         <ul>
-          <li v-for="p in m1">{{p.rsi}} : {{p.brand}}</li>
+          <li v-for="p in m1"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{p.rsi}} : {{p.brand}}</a></li>
         </ul>
         <p>zero</p>
         <ul>
-          <li v-for="p in zero">{{p.rsi}} : {{p.brand}}</li>
+          <li v-for="p in zero"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{p.rsi}} : {{p.brand}}</a></li>
         </ul>
       </div>
       <div id="main">
+        <img :src="img" alt="" height="550" width="775">
+      </div>
+      <div id="right">
 
       </div>
-      <!--      <img src="/src/assets/img/0【9989.jp  サンドラッグ】(0;82).png" alt="" height="500" width="900">-->
     </div>
   </div>
 </template>
@@ -93,7 +103,7 @@ const show = () => {
 #wrapper {
   border: red 3px solid;
   width: 100%;
-  height: 550px;
+  height: 610px;
 }
 
 nav {
@@ -132,7 +142,7 @@ nav ul li a:hover {
 
 #left {
   width: 165px;
-  height: 490px;
+  height: 550px;
   border: blueviolet solid 3px;
   float: left;
   overflow-x: scroll;
@@ -141,7 +151,7 @@ nav ul li a:hover {
 
 #main {
   width: 950px;
-  height: 490px;
+  height: 550px;
   border: #E7DA66 solid 2px;
 }
 

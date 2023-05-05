@@ -20,10 +20,13 @@ def show(request):
 
 def analyze(request):
     main.analyze()
+    show()
     return JsonResponse({'ana': 'lyze'})
 
 def get_new_trades(request):
     main.get_new_trades()
+    analyze()
+    show()
     return JsonResponse({'new': 'trades'})
 
 
