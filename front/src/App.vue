@@ -34,6 +34,9 @@ const reg_judge=()=>{
   console.log('judge')
   target_brand_code.value = document.getElementById('brand_code').innerText
   console.log(target_brand_code.value)
+  axios.post('api/post',{data: 'example'}).then(res=>{
+    console.log('posted')
+  })
 }
 const target_brand_code = ref('')
 const zero = ref("")
