@@ -1,9 +1,9 @@
-from django.shortcuts import render
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from myapp.management.commands import main
 import datetime as dt
 from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 def show(request):
@@ -19,15 +19,14 @@ def show(request):
                          'm1': m1,
                          'm2': m2})
 
+
 def analyze(request):
     main.analyze()
-    show()
     return JsonResponse({'ana': 'lyze'})
+
 
 def get_new_trades(request):
     main.get_new_trades()
-    analyze()
-    show()
     return JsonResponse({'new': 'trades'})
 
 
@@ -44,16 +43,18 @@ def register_trades(request):
     print(f"{minutes:.0f}分{seconds:.0f}秒")
     return JsonResponse({'kind': 'trade'})
 
+
 @csrf_exempt
 def post(request):
     print('now post')
-    if request.method =='POST':
-        posted = request.content_params
-        print(posted)
-        print('post')
+    if request.method == 'POST':
+        datas = json.loads(request.body)
+        print(datas['data'])
+        print(datas['unti'])
     else:
         print('else')
     return JsonResponse({'kind': 'trade'})
+
 
 def home(request):
     return redirect("http://localhost:5173/")

@@ -29,12 +29,33 @@ const analyze = () => {
 }
 window.onload = () => {
   show()
+  let date = new Date()
+  let year = date.getFullYear()
+  let month = date.getMonth() + 1
+  let day = date.getDate()
+
+  let toTwoDigits = (num, digit) => {
+    num += ''
+    if (num.length < digit) {
+      num = '0' + num
+    }
+    return num
+  }
+  let yyyy = toTwoDigits(year, 4)
+  let mm = toTwoDigits(month, 2)
+  let dd = toTwoDigits(day, 2)
+  let ymd = yyyy + "-" + mm + "-" + dd
+  console.log(ymd)
+  document.getElementById('judge_date').value = ymd
 }
-const reg_judge=()=>{
+const get_today = () => {
+
+}
+const reg_judge = () => {
   console.log('judge')
   target_brand_code.value = document.getElementById('brand_code').innerText
   console.log(target_brand_code.value)
-  axios.post('api/post',{data: 'example'}).then(res=>{
+  axios.post('api/post', {data: 'example', unti: 'sikko'}).then(res => {
     console.log('posted')
   })
 }
@@ -118,6 +139,10 @@ const drawing = (url) => {
       <div id="right" v-show="brand_url">
         <h5 style="margin-bottom: 0"><span id="brand_code">{{ brand_code }}</span>　<span>{{ brand_name }}</span></h5>
         <a :href="brand_url" target="_blank">株探リンク</a><br>
+        <input type="date" id="judge_date"><br>
+        <input type="radio" name="trend" value="up">上昇
+        <input type="radio" name="trend" value="down">下降
+        <textarea id="judge_text" cols="40" rows="10"></textarea><br>
         <button class="styled" type="button" @click="reg_judge">save</button>
       </div>
     </div>
@@ -197,25 +222,25 @@ nav ul li a:hover {
 }
 
 .styled {
-    border: 0;
-    line-height: 2.5;
-    padding: 0 20px;
-    font-size: 1rem;
-    text-align: center;
-    color: #fff;
-    text-shadow: 1px 1px 1px #000;
-    border-radius: 10px;
-    background-color: rgba(220, 0, 0, 1);
-    background-image: linear-gradient(to top left, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0));
-    box-shadow: inset 2px 2px 3px rgba(255, 255, 255, 0.6), inset -2px -2px 3px rgba(0, 0, 0, 0.6);
+  border: 0;
+  line-height: 2.5;
+  padding: 0 20px;
+  font-size: 1rem;
+  text-align: center;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+  border-radius: 10px;
+  background-color: rgba(220, 0, 0, 1);
+  background-image: linear-gradient(to top left, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0));
+  box-shadow: inset 2px 2px 3px rgba(255, 255, 255, 0.6), inset -2px -2px 3px rgba(0, 0, 0, 0.6);
 }
 
 .styled:hover {
-    background-color: rgba(255, 0, 0, 1);
+  background-color: rgba(255, 0, 0, 1);
 }
 
 .styled:active {
-    box-shadow: inset -2px -2px 3px rgba(255, 255, 255, 0.6), inset 2px 2px 3px rgba(0, 0, 0, 0.6);
+  box-shadow: inset -2px -2px 3px rgba(255, 255, 255, 0.6), inset 2px 2px 3px rgba(0, 0, 0, 0.6);
 }
 
 </style>
