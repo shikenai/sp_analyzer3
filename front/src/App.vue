@@ -2,32 +2,38 @@
 import axios from "axios";
 import {ref, reactive} from "vue";
 
+
 const registerBrands = () => {
+  // 銘柄情報を登録する際に使用するものであるため、普段は不活化
   axios.get('/api/register_brands.json').then(res => {
     console.log("registerBrands!")
   })
 }
+
 const registerTrades = () => {
+  // 取引情報を登録する際に使用するものであるため、普段は不活化
   axios.get('api/register_trades.json').then(res => {
     console.log('registerTrades!')
   })
 }
 const getNewTrades = () => {
+  // 毎日実行するもの。一度実行すると５０分程度時間がかかるため、クリックミスを避けるためにも実行前に確認する。
   const confirmed = confirm("本当に実行しますか？");
   if (confirmed) {
     axios.get('api/get_new_trades.json').then(res => {
-      console.log('get new trades')
     })
+    alert('完了しました')
   } else {
     alert('処理を中断しました。')
   }
 }
 const analyze = () => {
+  // 取得してきた取引情報を元に、チャートを生成する。
   axios.get('api/analyze.json').then(res => {
-    console.log('analyze')
   })
 }
 window.onload = () => {
+  // 画面更新時に実行するもの
   show()
   let date = new Date()
   let year = date.getFullYear()
@@ -45,21 +51,25 @@ window.onload = () => {
   let mm = toTwoDigits(month, 2)
   let dd = toTwoDigits(day, 2)
   let ymd = yyyy + "-" + mm + "-" + dd
-  console.log(ymd)
   document.getElementById('judge_date').value = ymd
 }
-const get_today = () => {
 
-}
 const reg_judge = () => {
-  console.log('judge')
+  // 投資判断等を記録するもの。
   target_brand_code.value = document.getElementById('brand_code').innerText
-  console.log(target_brand_code.value)
-  axios.post('api/post', {data: 'example', unti: 'sikko'}).then(res => {
-    console.log('posted')
+  let is_holding = document.getElementById('is_holding')
+  // console.log(element.checked)
+  // is_holding.value = element.checked
+  // console.log(is_holding.checked)
+  // console.log(is_holding.value)
+  axios.post('api/post', {brand_code: target_brand_code.value, is_holding: is_holding.checked}).then(res => {
   })
 }
 const target_brand_code = ref('')
+const is_holding = ref<boolean>()
+const is_watching = ref<boolean>()
+const judge_trend = ref('')
+const judge_text = ref('')
 const zero = ref("")
 const p2 = ref('')
 const p1 = ref('')
@@ -78,18 +88,19 @@ const show = () => {
     p1.value = JSON.parse(res.data.p1)
     m2.value = JSON.parse(res.data.m2)
     m1.value = JSON.parse(res.data.m1)
-    console.log(p2.value)
   })
 }
 const drawing = (url) => {
-  console.log('drawing')
-  console.log(url)
   img.value = url
   const index = url.indexOf('【')
   brand_code.value = url.slice(index + 1, index + 8)
   brand_name.value = url.slice(index + 10, url.indexOf('】'))
   brand_url.value = 'https://kabutan.jp/stock/news?code=' + brand_code.value.slice(0, 4)
-  console.log(brand_url)
+
+  axios.post('api/get_states.json',{brand_code: brand_code.value}).then(res=>{
+    document.getElementById('is_holding').checked = res.data.is_holding
+    document.getElementById('is_watching').checked = res.data.is_watching
+  })
 }
 </script>
 
@@ -136,12 +147,14 @@ const drawing = (url) => {
       <div id="main" v-show="img">
         <img :src="img" alt="" height="540" width="775">
       </div>
-      <div id="right" v-show="brand_url">
+      <div id="right" v-show="brand_url" style="padding-left: 10px">
         <h5 style="margin-bottom: 0"><span id="brand_code">{{ brand_code }}</span>　<span>{{ brand_name }}</span></h5>
-        <a :href="brand_url" target="_blank">株探リンク</a><br>
+        <a :href="brand_url" target="_blank">株探リンク</a><br><br>
         <input type="date" id="judge_date"><br>
-        <input type="radio" name="trend" value="up">上昇
-        <input type="radio" name="trend" value="down">下降
+        <input type="checkbox" id="is_holding"><label for="is_holding">保有フラグ</label><br>
+        <input type="checkbox" id="is_watching"><label for="is_watching">監視フラグ</label><br>
+        <input type="radio" name="judge_trend" value="up">上昇
+        <input type="radio" name="judge_trend" value="down">下降
         <textarea id="judge_text" cols="40" rows="10"></textarea><br>
         <button class="styled" type="button" @click="reg_judge">save</button>
       </div>

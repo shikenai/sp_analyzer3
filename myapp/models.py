@@ -5,6 +5,8 @@ class Brands(models.Model):
     code = models.CharField(max_length=8)
     name = models.CharField(max_length=30)
     division = models.CharField(max_length=20)
+    is_holding = models.BooleanField(verbose_name='保有', blank=True, null=True)
+    is_watching = models.BooleanField(verbose_name='監視', blank=True, null=True)
 
     def __str__(self):
         return '【' + self.code + '】' + self.name

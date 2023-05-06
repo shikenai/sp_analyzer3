@@ -4,6 +4,7 @@ from myapp.management.commands import main
 import datetime as dt
 from django.views.decorators.csrf import csrf_exempt
 import json
+from myapp.models import Brands
 
 
 def show(request):
@@ -45,12 +46,26 @@ def register_trades(request):
 
 
 @csrf_exempt
+def get_states(request):
+    if request.method == 'POST':
+        datas = json.loads(request.body)
+        brand_code = datas['brand_code']
+        _brand = Brands.objects.filter(code=brand_code).first()
+        print(_brand)
+        params = {
+            "is_holding": _brand.is_holding,
+            "is_watching": _brand.is_watching
+        }
+        print(params)
+        return JsonResponse(params)
+
+@csrf_exempt
 def post(request):
     print('now post')
     if request.method == 'POST':
         datas = json.loads(request.body)
-        print(datas['data'])
-        print(datas['unti'])
+        print(datas['brand_code'])
+        print(datas['is_holding'])
     else:
         print('else')
     return JsonResponse({'kind': 'trade'})
