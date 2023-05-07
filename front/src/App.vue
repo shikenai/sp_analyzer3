@@ -62,9 +62,7 @@ const reg_judge = () => {
   let judge_date = document.getElementById('judge_date')
   let judge_text = document.getElementById('judge_text')
   let judge_trend = document.querySelector('input[name="judge_trend"]:checked')
-  console.log(judge_date)
-  console.log(judge_text)
-  console.log(judge_trend)
+
   axios.post('api/reg_judge', {
     brand_code: target_brand_code.value,
     // 銘柄のstatesを変更するもの。
@@ -94,6 +92,9 @@ const m2 = ref('')
 const m1 = ref('')
 const holding = ref('')
 const watching = ref('')
+const judged_date = ref('')
+const judged_trend = ref('')
+const judged_text = ref('')
 
 const img = ref('')
 
@@ -119,8 +120,17 @@ const drawing = (url) => {
   brand_url.value = 'https://kabutan.jp/stock/news?code=' + brand_code.value.slice(0, 4)
 
   axios.post('api/get_states.json', {brand_code: brand_code.value}).then(res => {
-    document.getElementById('is_holding').checked = res.data.is_holding
-    document.getElementById('is_watching').checked = res.data.is_watching
+    document.getElementById('is_holding').checked = res.data.is_holding;
+    document.getElementById('is_watching').checked = res.data.is_watching;
+    if ('judge_date' in res.data){
+      judged_date.value = res.data.judge_date
+      judged_trend.value = res.data.judge_trend
+      judged_text.value = res.data.judge_text
+    }else {
+      judged_date.value = ""
+      judged_trend.value = ""
+      judged_text.value = ""
+    }
   })
 }
 </script>
@@ -188,6 +198,9 @@ const drawing = (url) => {
         <input type="radio" name="judge_trend" value="down">下降
         <textarea id="judge_text" cols="40" rows="10"></textarea><br>
         <button class="styled" type="button" @click="reg_judge">save</button>
+        <p>{{judged_date}}</p>
+        <p>{{judged_trend}}</p>
+        <p>{{judged_text}}</p>
       </div>
     </div>
   </div>

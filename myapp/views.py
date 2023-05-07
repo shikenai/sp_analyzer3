@@ -56,10 +56,21 @@ def get_states(request):
         brand_code = datas['brand_code']
         _brand = Brands.objects.filter(code=brand_code).first()
         print(_brand)
-        params = {
-            "is_holding": _brand.is_holding,
-            "is_watching": _brand.is_watching
-        }
+        _judges = Judge.objects.filter(brand=_brand)
+        if _judges:
+            _judge = _judges.order_by('-created_at').first()
+            params = {
+                "is_holding": _brand.is_holding,
+                "is_watching": _brand.is_watching,
+                "judge_date": _judge.date,
+                "judge_trend": _judge.trend,
+                "judge_text": _judge.judge,
+            }
+        else:
+            params = {
+                "is_holding": _brand.is_holding,
+                "is_watching": _brand.is_watching,
+            }
         print(params)
         return JsonResponse(params)
 
