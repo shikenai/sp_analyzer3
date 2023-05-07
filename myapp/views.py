@@ -8,17 +8,21 @@ from myapp.models import Brands
 
 
 def show(request):
-    df_zero, df_p1, df_p2, df_m1, df_m2 = main.show()
+    df_zero, df_p1, df_p2, df_m1, df_m2, df_holding, df_watching = main.show()
     zero = df_zero.to_json(orient='records')
     p1 = df_p1.to_json(orient='records')
     p2 = df_p2.to_json(orient='records')
     m1 = df_m1.to_json(orient='records')
     m2 = df_m2.to_json(orient='records')
+    holding = df_holding.to_json(orient='records')
+    watching = df_watching.to_json(orient='records')
     return JsonResponse({'zero': zero,
                          'p1': p1,
                          'p2': p2,
                          'm1': m1,
-                         'm2': m2})
+                         'm2': m2,
+                         'holding': holding,
+                         'watching': watching})
 
 
 def analyze(request):
@@ -60,12 +64,18 @@ def get_states(request):
         return JsonResponse(params)
 
 @csrf_exempt
-def post(request):
+def reg_judge(request):
     print('now post')
     if request.method == 'POST':
         datas = json.loads(request.body)
-        print(datas['brand_code'])
-        print(datas['is_holding'])
+        _brand_code=datas['brand_code']
+        _is_watching = datas['is_watching']
+        _is_holding = datas['is_holding']
+        _brand = Brands.objects.filter(code=_brand_code).first()
+        _brand.is_holding = _is_holding
+        _brand.is_watching = _is_watching
+        _brand.save()
+        print('done')
     else:
         print('else')
     return JsonResponse({'kind': 'trade'})

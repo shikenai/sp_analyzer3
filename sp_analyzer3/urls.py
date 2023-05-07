@@ -25,7 +25,7 @@ urlpatterns = [
     path("api/get_new_trades.json", views.get_new_trades),
     path("api/analyze.json", views.analyze),
     path("api/show.json", views.show),
-    path("api/post", views.post),
+    path("api/reg_judge", views.reg_judge),
     path("api/get_states.json", views.get_states),
     path("", views.home),
 ]

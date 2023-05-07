@@ -22,6 +22,9 @@ def show():
     df_p2 = pd.DataFrame(columns=col_list)
     df_m1 = pd.DataFrame(columns=col_list)
     df_m2 = pd.DataFrame(columns=col_list)
+    df_watching = pd.DataFrame(columns=col_list)
+    df_holding = pd.DataFrame(columns=col_list)
+
     link_path = '/src/assets/img/'
 
     for filename in os.listdir(folder_path):
@@ -48,12 +51,21 @@ def show():
                     df_m1 = pd.concat([df_m1, temp_df])
                 elif sign == '-2':
                     df_m2 = pd.concat([df_m2, temp_df])
+                _brand = Brands.objects.filter(code=brand[:7]).first()
+                if _brand.is_watching:
+                    df_watching = pd.concat([df_watching, temp_df])
+                if _brand.is_holding:
+                    df_holding = pd.concat([df_holding, temp_df])
+
+
     df_zero = df_zero.sort_values('rsi')
     df_p2 = df_p2.sort_values('rsi')
     df_p1 = df_p1.sort_values('rsi')
     df_m2 = df_m2.sort_values('rsi', ascending=False)
     df_m1 = df_m1.sort_values('rsi', ascending=False)
-    return df_zero, df_p1, df_p2, df_m1, df_m2
+    df_watching = df_watching.sort_values('rsi')
+    df_holding = df_holding.sort_values('rsi')
+    return df_zero, df_p1, df_p2, df_m1, df_m2, df_holding, df_watching
 
 
 def analyze():

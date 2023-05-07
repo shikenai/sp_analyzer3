@@ -58,11 +58,16 @@ const reg_judge = () => {
   // 投資判断等を記録するもの。
   target_brand_code.value = document.getElementById('brand_code').innerText
   let is_holding = document.getElementById('is_holding')
+  let is_watching = document.getElementById('is_watching')
   // console.log(element.checked)
   // is_holding.value = element.checked
   // console.log(is_holding.checked)
   // console.log(is_holding.value)
-  axios.post('api/post', {brand_code: target_brand_code.value, is_holding: is_holding.checked}).then(res => {
+  axios.post('api/reg_judge', {
+    brand_code: target_brand_code.value,
+    is_holding: is_holding.checked,
+    is_watching: is_watching.checked,
+  }).then(res => {
   })
 }
 const target_brand_code = ref('')
@@ -75,6 +80,8 @@ const p2 = ref('')
 const p1 = ref('')
 const m2 = ref('')
 const m1 = ref('')
+const holding = ref('')
+const watching = ref('')
 
 const img = ref('')
 
@@ -88,6 +95,8 @@ const show = () => {
     p1.value = JSON.parse(res.data.p1)
     m2.value = JSON.parse(res.data.m2)
     m1.value = JSON.parse(res.data.m1)
+    holding.value = JSON.parse(res.data.holding)
+    watching.value = JSON.parse(res.data.watching)
   })
 }
 const drawing = (url) => {
@@ -97,7 +106,7 @@ const drawing = (url) => {
   brand_name.value = url.slice(index + 10, url.indexOf('】'))
   brand_url.value = 'https://kabutan.jp/stock/news?code=' + brand_code.value.slice(0, 4)
 
-  axios.post('api/get_states.json',{brand_code: brand_code.value}).then(res=>{
+  axios.post('api/get_states.json', {brand_code: brand_code.value}).then(res => {
     document.getElementById('is_holding').checked = res.data.is_holding
     document.getElementById('is_watching').checked = res.data.is_watching
   })
@@ -118,6 +127,16 @@ const drawing = (url) => {
     </nav>
     <div id="contents">
       <div id="left">
+        <p>holding</p>
+        <ul>
+          <li v-for="p in holding"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{ p.brand }}</a>
+          </li>
+        </ul>
+        <p>watching</p>
+        <ul>
+          <li v-for="p in watching"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{ p.brand }}</a>
+          </li>
+        </ul>
         <p>p2</p>
         <ul>
           <li v-for="p in p2"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{ p.brand }}</a>
