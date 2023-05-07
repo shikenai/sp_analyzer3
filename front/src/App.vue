@@ -74,8 +74,8 @@ const reg_judge = () => {
     judge_trend: judge_trend.value
   }).then(res => {
     alert('登録しました')
-    document.getElementById('judge_text').value='';
-    for (const elem of document.getElementsByName('judge_trend')){
+    document.getElementById('judge_text').value = '';
+    for (const elem of document.getElementsByName('judge_trend')) {
       elem.checked = false;
     }
   })
@@ -122,11 +122,11 @@ const drawing = (url) => {
   axios.post('api/get_states.json', {brand_code: brand_code.value}).then(res => {
     document.getElementById('is_holding').checked = res.data.is_holding;
     document.getElementById('is_watching').checked = res.data.is_watching;
-    if ('judge_date' in res.data){
+    if ('judge_date' in res.data) {
       judged_date.value = res.data.judge_date
       judged_trend.value = res.data.judge_trend
       judged_text.value = res.data.judge_text
-    }else {
+    } else {
       judged_date.value = ""
       judged_trend.value = ""
       judged_text.value = ""
@@ -148,15 +148,22 @@ const drawing = (url) => {
       </ul>
     </nav>
     <div id="contents">
+      <div id="main">
+        <img :src="img" alt="" height="600" width="775">
+      </div>
       <div id="left">
         <p>holding</p>
         <ul>
-          <li v-for="p in holding"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{ p.brand }}</a>
+          <li v-for="p in holding"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{
+              p.brand
+            }}</a>
           </li>
         </ul>
         <p>watching</p>
         <ul>
-          <li v-for="p in watching"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{ p.brand }}</a>
+          <li v-for="p in watching"><a @click.prevent="drawing(p.filename)" :href="p.filename">{{ p.rsi }} : {{
+              p.brand
+            }}</a>
           </li>
         </ul>
         <p>p2</p>
@@ -185,10 +192,7 @@ const drawing = (url) => {
             {{ p.brand }}</a></li>
         </ul>
       </div>
-      <div id="main" v-show="img">
-        <img :src="img" alt="" height="600" width="775">
-      </div>
-      <div id="right" v-show="brand_url" style="padding-left: 10px">
+      <div id="right" style="padding-left: 10px">
         <h5 style="margin-bottom: 0"><span id="brand_code">{{ brand_code }}</span>　<span>{{ brand_name }}</span></h5>
         <a :href="brand_url" target="_blank">株探リンク</a><br><br>
         <input type="date" id="judge_date"><br>
@@ -198,9 +202,11 @@ const drawing = (url) => {
         <input type="radio" name="judge_trend" value="down">下降
         <textarea id="judge_text" cols="40" rows="10"></textarea><br>
         <button class="styled" type="button" @click="reg_judge">save</button>
-        <p>{{judged_date}}</p>
-        <p>{{judged_trend}}</p>
-        <p>{{judged_text}}</p>
+        <div id="history" v-show="judged_date" style="background-color: rgba(198,210,238,1)">
+          <p>{{ judged_date }}</p>
+          <p>{{ judged_trend }}</p>
+          <p>{{ judged_text }}</p>
+        </div>
       </div>
     </div>
   </div>
