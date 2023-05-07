@@ -38,7 +38,7 @@ def show():
                 brand = filename[i1 + 1:i2]
                 sign = filename[i3 + 1:i4]
                 rsi = filename[i4 + 1:i5]
-                new_row = [[sign, rsi, brand,link_path + filename]]
+                new_row = [[sign, rsi, brand, link_path + filename]]
                 temp_df = pd.DataFrame(new_row, columns=col_list)
 
                 if sign == '0':
@@ -56,7 +56,6 @@ def show():
                     df_watching = pd.concat([df_watching, temp_df])
                 if _brand.is_holding:
                     df_holding = pd.concat([df_holding, temp_df])
-
 
     df_zero = df_zero.sort_values('rsi')
     df_p2 = df_p2.sort_values('rsi')

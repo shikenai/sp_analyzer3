@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 
 class Brands(models.Model):
     code = models.CharField(max_length=8)
@@ -11,6 +11,16 @@ class Brands(models.Model):
     def __str__(self):
         return '【' + self.code + '】' + self.name
 
+
+class Judge(models.Model):
+    brand = models.ForeignKey(to=Brands, on_delete=models.CASCADE)
+    date = models.DateField()
+    trend = models.CharField(max_length=5)
+    judge = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now())
+
+    def __str__(self):
+        return '【' + self.brand.code + ' ' + self.brand.name + '】' + self.date.strftime("%Y年%m月%d日")
 
 class Trades(models.Model):
     brand = models.ForeignKey(to=Brands, on_delete=models.CASCADE)

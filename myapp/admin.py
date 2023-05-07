@@ -5,3 +5,4 @@ from myapp import models
 
 admin.site.register(models.Brands)
 admin.site.register(models.Trades)
+admin.site.register(models.Judge)

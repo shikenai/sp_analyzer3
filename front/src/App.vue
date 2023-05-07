@@ -59,15 +59,27 @@ const reg_judge = () => {
   target_brand_code.value = document.getElementById('brand_code').innerText
   let is_holding = document.getElementById('is_holding')
   let is_watching = document.getElementById('is_watching')
-  // console.log(element.checked)
-  // is_holding.value = element.checked
-  // console.log(is_holding.checked)
-  // console.log(is_holding.value)
+  let judge_date = document.getElementById('judge_date')
+  let judge_text = document.getElementById('judge_text')
+  let judge_trend = document.querySelector('input[name="judge_trend"]:checked')
+  console.log(judge_date)
+  console.log(judge_text)
+  console.log(judge_trend)
   axios.post('api/reg_judge', {
     brand_code: target_brand_code.value,
+    // 銘柄のstatesを変更するもの。
     is_holding: is_holding.checked,
     is_watching: is_watching.checked,
+    // 投資判断を登録するもの。
+    judge_date: judge_date.value,
+    judge_text: judge_text.value,
+    judge_trend: judge_trend.value
   }).then(res => {
+    alert('登録しました')
+    document.getElementById('judge_text').value='';
+    for (const elem of document.getElementsByName('judge_trend')){
+      elem.checked = false;
+    }
   })
 }
 const target_brand_code = ref('')
@@ -164,7 +176,7 @@ const drawing = (url) => {
         </ul>
       </div>
       <div id="main" v-show="img">
-        <img :src="img" alt="" height="540" width="775">
+        <img :src="img" alt="" height="600" width="775">
       </div>
       <div id="right" v-show="brand_url" style="padding-left: 10px">
         <h5 style="margin-bottom: 0"><span id="brand_code">{{ brand_code }}</span>　<span>{{ brand_name }}</span></h5>
@@ -185,7 +197,7 @@ const drawing = (url) => {
 #wrapper {
   border: red 3px solid;
   width: 100%;
-  height: 610px;
+  height: 670px;
 }
 
 nav {
@@ -223,7 +235,7 @@ nav ul li a:hover {
 #contents {
   display: flex;
   flex-direction: row;
-  height: 550px;
+  height: 610px;
 }
 
 #left {

@@ -4,7 +4,7 @@ from myapp.management.commands import main
 import datetime as dt
 from django.views.decorators.csrf import csrf_exempt
 import json
-from myapp.models import Brands
+from myapp.models import Brands, Judge
 
 
 def show(request):
@@ -63,22 +63,36 @@ def get_states(request):
         print(params)
         return JsonResponse(params)
 
+
 @csrf_exempt
 def reg_judge(request):
     print('now post')
     if request.method == 'POST':
         datas = json.loads(request.body)
-        _brand_code=datas['brand_code']
+        _brand_code = datas['brand_code']
         _is_watching = datas['is_watching']
         _is_holding = datas['is_holding']
         _brand = Brands.objects.filter(code=_brand_code).first()
         _brand.is_holding = _is_holding
         _brand.is_watching = _is_watching
         _brand.save()
+
+        _date = datas['judge_date']
+        _text = datas['judge_text']
+        _trend = datas['judge_trend']
+
+        judge = Judge()
+        judge.brand = _brand
+        date = dt.datetime.strptime(_date, '%Y-%m-%d').date()
+        judge.date = date
+        judge.judge = _text
+        judge.trend = _trend
+        judge.save()
         print('done')
+        return JsonResponse({'states': 'done'})
     else:
         print('else')
-    return JsonResponse({'kind': 'trade'})
+        return JsonResponse({'kind': 'trade'})
 
 
 def home(request):
