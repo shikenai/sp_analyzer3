@@ -21,8 +21,8 @@ const getNewTrades = () => {
   const confirmed = confirm("本当に実行しますか？");
   if (confirmed) {
     axios.get('api/get_new_trades.json').then(res => {
+      alert('完了しました')
     })
-    alert('完了しました')
   } else {
     alert('処理を中断しました。')
   }
@@ -73,12 +73,12 @@ const reg_judge = () => {
     judge_text: judge_text.value,
     judge_trend: judge_trend.value
   }).then(res => {
-    alert('登録しました')
     document.getElementById('judge_text').value = '';
     for (const elem of document.getElementsByName('judge_trend')) {
       elem.checked = false;
     }
   })
+  alert('登録しました')
 }
 const target_brand_code = ref('')
 const is_holding = ref<boolean>()
@@ -133,6 +133,13 @@ const drawing = (url) => {
     }
   })
 }
+const temp1 = ref('')
+const survey=()=>{
+  axios.get('api/survey').then(res=>{
+    temp1.value = res.data.kind
+    console.log(temp1.value)
+  })
+}
 </script>
 
 <template>
@@ -143,13 +150,15 @@ const drawing = (url) => {
         <!--        <li><a href="" @click.prevent="registerBrands">regB</a></li>-->
         <!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
         <li><a href="" @click.prevent="getNewTrades">最新の取引情報を取得</a></li>
+        <li><a href="" @click.prevent="survey">test</a></li>
         <li><a href="" @click.prevent="analyze">画像生成</a></li>
         <li><a href="" @click.prevent="show">画像表示</a></li>
       </ul>
     </nav>
     <div id="contents">
       <div id="main">
-        <img :src="img" alt="" height="600" width="775">
+        <img :src="img" alt="" height="600" width="400">
+<!--        <img :src="img" alt="" height="600" width="775">-->
       </div>
       <div id="left">
         <p>holding</p>

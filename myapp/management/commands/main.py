@@ -67,6 +67,46 @@ def show():
     return df_zero, df_p1, df_p2, df_m1, df_m2, df_holding, df_watching
 
 
+def survey():
+    t = dt.datetime.now()
+    erazer(positive=True)
+    trades = Trades.objects.all()
+    brands = Brands.objects.all()
+
+    list_brands_id = brands.values_list('id', flat=True)
+    df = pd.DataFrame.from_records(trades.values())
+    # list_brands_id = list_brands_id[:1]
+    for i in list_brands_id:
+        extracted_df = df[df['brand_id'] == i]
+        extracted_df = extracted_df.sort_values('Date', ascending=True)
+        extracted_df = add_high_low_mean(extracted_df)
+        extracted_df = add_ma2(extracted_df, 'Close', (5, 10, 25, 60))
+        extracted_df = compare_columns(extracted_df, 'Close_5ma', 'Close_10ma')
+
+        extracted_df = add_ma2(extracted_df, 'High', (3, 10))
+        extracted_df = add_ma2(extracted_df, 'Low', (3, 10))
+        extracted_df = get_continual_states(extracted_df, 'High_3ma')
+        extracted_df = get_continual_states(extracted_df, 'Low_3ma')
+        extracted_df = get_continual_states(extracted_df, 'Close_5ma')
+        extracted_df = get_continual_states(extracted_df, 'Close_10ma')
+        extracted_df = get_continual_states(extracted_df, 'Close_25ma')
+        extracted_df = get_continual_states(extracted_df, 'Close_60ma')
+
+        pd.set_option('display.max_rows', extracted_df.shape[0])
+        pd.set_option('display.max_columns', extracted_df.shape[1])
+        extracted_df.index = pd.to_datetime(extracted_df['Date'], format='mixed')
+        extracted_df = extracted_df.dropna()
+        # print(extracted_df)
+        # print(extracted_df.columns)
+        # plot_img(extracted_df)
+        # plot_img2(extracted_df)
+        plot_img3(extracted_df)
+
+    elapsed_time = dt.datetime.now() - t
+    minutes, seconds = divmod(elapsed_time.total_seconds(), 60)
+    print(f"{minutes:.0f}分{seconds:.0f}秒")
+
+
 def analyze():
     t = dt.datetime.now()
     erazer()
@@ -143,6 +183,101 @@ def plot_img(df):
     plt.close()
 
 
+def plot_img2(df):
+    # 銘柄情報を取得
+    print('plot2')
+    filepath = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img2')
+    brand = Brands.objects.get(id=df['brand_id'][0])
+    # Close_?ma_positive:1ならば上昇、0ならば下降
+    filename_head = f'({str(df["Close_5ma_positive"][-1])}{str(df["Close_25ma_positive"][-1])}{str(df["Close_5ma_positive"][-1])}){round(df["momentum"][-1],1)}({df["sign"][-1]} {df["sign2"][-1]})【{brand.code}  {brand.name}】'
+    # sign:macd転換したか継続したか
+    # sign2:macdの状態がどの程度継続しているか
+    filename_tail = f'({df["sign"][-1]}{df["sign2"][-1]};{int(df["rsi"][-1])}).png'
+    full_filename = os.path.join(filepath, filename_head + filename_tail)
+    title = str(df["sign2"][-1]) + '  ' + brand.code + '  ' + brand.name + '  ' + brand.division
+    print(full_filename)
+    print(df)
+    # print(df.columns)
+    # 直近の最高値、最安値
+    df["h_line"] = df["High"].rolling(20, min_periods=1).max()
+    df["l_line"] = df["Low"].rolling(20, min_periods=1).min()
+    adp = [mpf.make_addplot(df[['h_line', 'l_line']], type='step', alpha=0.2, panel=0)]
+    adp = [mpf.make_addplot(df['high_low_mean'], type='line', alpha=0.5, panel=0)]
+
+    # 移動平均とBBの設定（パネル０に描画するもの）
+    column_list = df.columns
+    ma_bb_columns = [c for c in column_list if 'ma' in c or 'band' in c]
+    for c in ma_bb_columns:
+        if 'ma' in c and 'macd' not in c and 'positive' not in c:
+            adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle='--', alpha=0.7))
+        elif 'band' in c:
+            adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle=':', alpha=0.5))
+
+    # macdの描画
+    adp.append(mpf.make_addplot(df['macd'], type='line', panel=1, color='green'))
+    adp.append(mpf.make_addplot(df['macd_signal'], type='line', panel=1, color='blue'))
+    adp.append(mpf.make_addplot(df['hist'], type='bar', panel=1, color='red'))
+    adp.append(mpf.make_addplot(df['hist_diff_3mean'], type='line', panel=1, color='yellow', alpha=0.6))
+    adp.append(mpf.make_addplot(df['sign2'], type='line', panel=1, color='gray'))
+
+    # RSI
+    adp.append(mpf.make_addplot(df[['rsi', 'UL', 'DL']], ylim=[0, 100], panel=2))
+
+    # stocha
+    adp.append(mpf.make_addplot(df[['%D', '%SD', 'UL', 'DL']], ylim=[0, 100], panel=3))
+
+    # 全体のスタイル
+    mc = mpf.make_marketcolors(up='#049DBF', down='#D93D4A',
+                               edge='#F2CED1', wick={'up': '#049DBF', 'down': '#D93D4A'})
+    cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray", rc={"font.family": plt.rcParams["font.family"][0]})
+    mpf.plot(df, type='candle', addplot=adp,
+             fill_between=dict(y1=df['span1'].values, y2=df['span2'].values, alpha=0.2, color='gray'), figsize=(19, 12),
+             style=cs, savefig=full_filename, panel_ratios=(3, 1, 1, 1), title=title, tight_layout=True)
+    plt.clf()
+    plt.close()
+
+def plot_img3(df):
+    # 銘柄情報を取得
+    print('plot3')
+    print(df.columns)
+    filepath = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img2')
+    brand = Brands.objects.get(id=df['brand_id'][0])
+    # Close_?ma_positive:1ならば上昇、0ならば下降
+    print(df['gx'])
+    filename_head = f'({str(df["Close_5ma_positive"][-1])}{str(df["Close_25ma_positive"][-1])}{str(df["Close_60ma_positive"][-1])})勢い：{round(df["Close_5ma_diff_rate"][-1],1)}、経過{df["gx"][-1]}日【{brand.code}  {brand.name}】'
+    # filename_head = f'【{brand.code}  {brand.name}】'
+    # sign:macd転換したか継続したか
+    # sign2:macdの状態がどの程度継続しているか
+    # filename_tail = f'({df["sign"][-1]}{df["sign2"][-1]};{int(df["rsi"][-1])}).png'
+    filename_tail = f'.png'
+    full_filename = os.path.join(filepath, filename_head + filename_tail)
+    title = brand.code + '  ' + brand.name + '  ' + brand.division
+    print(full_filename)
+    # print(df.columns)
+    # 直近の最高値、最安値
+    df["h_line"] = df["High"].rolling(20, min_periods=1).max()
+    df["l_line"] = df["Low"].rolling(20, min_periods=1).min()
+    adp = [mpf.make_addplot(df[['h_line', 'l_line']], type='step', alpha=0.2, panel=0)]
+    adp = [mpf.make_addplot(df['hl_mean'], type='line', alpha=0.5, panel=0)]
+
+    # 移動平均とBBの設定（パネル０に描画するもの）
+    column_list = df.columns
+    ma_columns = [c for c in column_list if 'ma' in c]
+    for c in ma_columns:
+        if 'ma' in c and 'hl' not in c and 'diff' not in c and 'continual' not in c and 'positive' not in c and 'High' not in c and 'Low' not in c:
+            adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle='--', alpha=0.7))
+        elif 'hl' in c and 'diff' not in c and 'continual' not in c:
+            adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle=':', alpha=0.5))
+
+    # 全体のスタイル
+    mc = mpf.make_marketcolors(up='#D93D4A', down='#5AFF19',
+                               edge='#F2CED1', wick={'up': '#049DBF', 'down': '#D93D4A'})
+    cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray", rc={"font.family": plt.rcParams["font.family"][0]})
+    mpf.plot(df, type='candle', addplot=adp,figsize=(19, 12),
+             style=cs, savefig=full_filename, title=title, tight_layout=True)
+    print(df.columns)
+    plt.clf()
+    plt.close()
 # ============【ココカラ】dfに移動平均等を追加する===============
 def add_stochastic(df, term=14):
     stochastic = pd.DataFrame()
@@ -156,6 +291,35 @@ def add_stochastic(df, term=14):
     return df
 
 
+def compare_columns(df, column_a, column_b):
+    diff_values = []
+    prev_diff = 0
+
+    for index, row in df.iterrows():
+        a = row[column_a]
+        b = row[column_b]
+
+        if a > b:
+            if prev_diff < 0:
+                diff = 1
+                prev_diff = 1
+            else:
+                prev_diff += 1
+                diff = prev_diff
+        elif a < b:
+            if prev_diff > 0:
+                diff = -1
+                prev_diff = -1
+            else:
+                prev_diff -= 1
+                diff = prev_diff
+        else:
+            diff = 0
+            prev_diff = 0
+        diff_values.append(diff)
+
+    df['gx'] = diff_values
+    return df
 def add_bb(df, bb_period=20, bb_dev=2):
     # ボリンジャーバンドの計算
     rolling_mean = df['Close'].rolling(bb_period).mean()
@@ -167,14 +331,57 @@ def add_bb(df, bb_period=20, bb_dev=2):
     return df
 
 
-def add_ma(df, col, _list=(10, 25, 60)):
+def add_ma(df, col, _list=(5, 25, 60), positive=False):
     for i in _list:
         df[f'{col}_{str(i)}ma'] = df[col].rolling(i).mean()
+        if positive:
+            df[f'{col}_{str(i)}ma_diff'] = df[f'{col}_{str(i)}ma'].diff()
+            df[f'{col}_{str(i)}ma_positive'] = df[f'{col}_{str(i)}ma_diff'].apply(lambda x: 1 if x > 0 else -1)
+            # df = df.drop(f'{col}_{str(i)}ma_diff', axis=1)
+    print(_list[0])
+    print(df.columns)
+    print(f'{col}_{_list[0]}ma_diff')
+    df['momentum'] = df[f'{col}_{_list[0]}ma_diff'] - df[f'{col}_{_list[1]}ma_diff']
+    return df
+
+def add_ma2(df, col, _list):
+    for i in _list:
+        df[f'{col}_{str(i)}ma'] = df[col].rolling(i).mean()
+        df[f'{col}_{str(i)}ma_diff'] = df[f'{col}_{str(i)}ma'].diff()
+        df[f'{col}_{str(i)}ma_diff_rate'] = round(df[f'{col}_{str(i)}ma_diff'] / df[col] * 100, 3)
+        df[f'{col}_{str(i)}ma_positive'] = df[f'{col}_{str(i)}ma_diff'].apply(lambda x: 1 if x > 0 else -1)
+        df = df.drop(f'{col}_{str(i)}ma_diff', axis=1)
 
     return df
 
+def get_continual_states(df, col):
+    diff_signs = np.sign(df[col].diff())
 
-def add_macd(df):
+    result = []
+    val = 0
+    for sign in diff_signs:
+        if sign == 1:
+            if val < 0:
+                val = 1
+            else:
+                val += 1
+        elif sign == -1:
+            if val > 0:
+                val = -1
+            else:
+                val -= 1
+
+        result.append(val)
+    df[f'{col}_continual'] = result
+
+    return df
+
+def add_high_low_mean(df):
+    df['hl_mean'] = df[['High', 'Low']].mean(axis=1)
+    return df
+
+
+def add_macd(df, positive=False):
     # 普通のmacd
     ema12 = df['Close'].ewm(span=12, adjust=False).mean()
     ema26 = df['Close'].ewm(span=26, adjust=False).mean()
@@ -182,20 +389,39 @@ def add_macd(df):
     signal = macd.ewm(span=9, adjust=False).mean()
     hist = macd - signal
     macd_df = pd.DataFrame({'macd': macd, 'macd_signal': signal, 'hist': hist})
-    # macd_df = pd.DataFrame({'hist': hist})
     macd_df['hist_diff'] = macd_df['hist'].diff()
     macd_df['hist_diff_3mean'] = macd_df['hist'].diff().rolling(3).mean()
     macd_df['t'] = macd_df['hist_diff_3mean'].apply(sign_func)
     macd_df['t_shift'] = macd_df['hist_diff_3mean'].shift(1).apply(sign_func)
     macd_df['hist_posi'] = macd_df['hist'].apply(sign_func)
     macd_df['sign'] = 0
+    if positive:
+        diff_signs = np.sign(macd_df['hist_diff_3mean'].diff()).fillna(0)
+        result = []
+        val = 0
+        for sign in diff_signs:
+            if sign == 1:
+                if val < 0:
+                    val = 1
+                else:
+                    val += 1
+            elif sign == -1:
+                if val > 0:
+                    val = -1
+                else:
+                    val -= 1
+
+            result.append(val)
+        macd_df['sign2'] = result
+        pd.set_option('display.max_rows', macd_df.shape[0])
+        pd.set_option('display.max_columns', macd_df.shape[1])
+
     macd_df.loc[(macd_df['hist_posi'] == -1) & (macd_df['t_shift'] == -1) & (macd_df['t'] == 1), 'sign'] = 2
     macd_df.loc[(macd_df['hist_posi'] == -1) & (macd_df['t_shift'] == 1) & (macd_df['t'] == 1), 'sign'] = 1
     macd_df.loc[(macd_df['hist_posi'] == 1) & (macd_df['t_shift'] == 1) & (macd_df['t'] == -1), 'sign'] = -2
     macd_df.loc[(macd_df['hist_posi'] == 1) & (macd_df['t_shift'] == -1) & (macd_df['t'] == -1), 'sign'] = -1
 
     macd_df = macd_df.drop(['t', 't_shift', 'hist_diff', 'hist_posi'], axis=1)
-    # print(macd_df[['hist', 'hist_posi', 'hist_diff_3mean', 't', 't_shift', '_sign']])
     df = pd.concat([df, macd_df], axis=1)
     return df
 
@@ -398,8 +624,12 @@ def register_brands_from_tse():
     print('DONE')
 
 
-def erazer():
-    folder_path = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img')  # フォルダのパスを設定
+def erazer(positive=False):
+    if positive:
+        folder_name = 'img2'
+    else:
+        folder_name = 'img'
+    folder_path = os.path.join(os.getcwd(), 'front', 'src', 'assets', folder_name)  # フォルダのパスを設定
 
     for file_name in os.listdir(folder_path):  # フォルダ内のファイル名を取得
         file_path = os.path.join(folder_path, file_name)  # ファイルのパスを設定

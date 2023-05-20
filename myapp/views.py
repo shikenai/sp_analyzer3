@@ -106,5 +106,11 @@ def reg_judge(request):
         return JsonResponse({'kind': 'trade'})
 
 
+def survey(request):
+    print('survey')
+    main.survey()
+    return JsonResponse({'kind': 'trade'})
+
+
 def home(request):
     return redirect("http://localhost:5173/")
