@@ -150,9 +150,9 @@ const survey=()=>{
         <!--        <li><a href="" @click.prevent="registerBrands">regB</a></li>-->
         <!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
         <li><a href="" @click.prevent="getNewTrades">最新の取引情報を取得</a></li>
-        <li><a href="" @click.prevent="survey">test</a></li>
-        <li><a href="" @click.prevent="analyze">画像生成</a></li>
-        <li><a href="" @click.prevent="show">画像表示</a></li>
+        <li><a href="" @click.prevent="survey">新・画像生成</a></li>
+<!--        <li><a href="" @click.prevent="analyze">画像生成</a></li>-->
+<!--        <li><a href="" @click.prevent="show">画像表示</a></li>-->
       </ul>
     </nav>
     <div id="contents">

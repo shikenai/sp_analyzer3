@@ -69,7 +69,9 @@ def show():
 
 def survey():
     t = dt.datetime.now()
-    erazer(positive=True)
+    erazer('img2')
+    erazer('buy')
+    erazer('sell')
     trades = Trades.objects.all()
     brands = Brands.objects.all()
 
@@ -79,12 +81,14 @@ def survey():
     for i in list_brands_id:
         extracted_df = df[df['brand_id'] == i]
         extracted_df = extracted_df.sort_values('Date', ascending=True)
-        extracted_df = add_high_low_mean(extracted_df)
+        # extracted_df = add_high_low_mean(extracted_df)
         extracted_df = add_ma2(extracted_df, 'Close', (5, 10, 25, 60))
-        extracted_df = compare_columns(extracted_df, 'Close_5ma', 'Close_10ma')
+        extracted_df = compare_columns(extracted_df, 'Close_5ma', 'Close_10ma', 'gx_is')
+        extracted_df = compare_columns(extracted_df, 'Close_5ma', 'Close_25ma', 'gx_im')
 
         extracted_df = add_ma2(extracted_df, 'High', (3, 10))
         extracted_df = add_ma2(extracted_df, 'Low', (3, 10))
+        extracted_df = add_macd(extracted_df, positive=True)
         extracted_df = get_continual_states(extracted_df, 'High_3ma')
         extracted_df = get_continual_states(extracted_df, 'Low_3ma')
         extracted_df = get_continual_states(extracted_df, 'Close_5ma')
@@ -96,10 +100,7 @@ def survey():
         pd.set_option('display.max_columns', extracted_df.shape[1])
         extracted_df.index = pd.to_datetime(extracted_df['Date'], format='mixed')
         extracted_df = extracted_df.dropna()
-        # print(extracted_df)
-        # print(extracted_df.columns)
-        # plot_img(extracted_df)
-        # plot_img2(extracted_df)
+
         plot_img3(extracted_df)
 
     elapsed_time = dt.datetime.now() - t
@@ -237,14 +238,18 @@ def plot_img2(df):
     plt.close()
 
 def plot_img3(df):
-    # 銘柄情報を取得
-    print('plot3')
-    print(df.columns)
     filepath = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'img2')
+    filepath_buy = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'buy')
+    filepath_sell = os.path.join(os.getcwd(), 'front', 'src', 'assets', 'sell')
+
     brand = Brands.objects.get(id=df['brand_id'][0])
     # Close_?ma_positive:1ならば上昇、0ならば下降
-    print(df['gx'])
-    filename_head = f'({str(df["Close_5ma_positive"][-1])}{str(df["Close_25ma_positive"][-1])}{str(df["Close_60ma_positive"][-1])})勢い：{round(df["Close_5ma_diff_rate"][-1],1)}、経過{df["gx"][-1]}日【{brand.code}  {brand.name}】'
+    #
+    macd_sign4 = round(df["hist_diff_3mean"][-4], 2)
+    macd_sign3 = round(df["hist_diff_3mean"][-3], 2)
+    macd_sign2 = round(df["hist_diff_3mean"][-2], 2)
+    macd_sign1 = round(df["hist_diff_3mean"][-1], 2)
+    filename_head = f'({str(df["Close_5ma_positive"][-1])}{str(df["Close_25ma_positive"][-1])}{str(df["Close_60ma_positive"][-1])})勢い：5ma_diff（{round(df["Close_5ma_diff_rate"][-1],1)}） macd：{str(macd_sign4).replace("-", "▲")}→{str(macd_sign3).replace("-", "▲")}→{str(macd_sign2).replace("-", "▲")}→{str(macd_sign1).replace("-", "▲")}、gxis経過{df["gx_is"][-1]}日、gxim経過{df["gx_im"][-1]}日【{brand.code}  {brand.name}】'
     # filename_head = f'【{brand.code}  {brand.name}】'
     # sign:macd転換したか継続したか
     # sign2:macdの状態がどの程度継続しているか
@@ -252,30 +257,51 @@ def plot_img3(df):
     filename_tail = f'.png'
     full_filename = os.path.join(filepath, filename_head + filename_tail)
     title = brand.code + '  ' + brand.name + '  ' + brand.division
-    print(full_filename)
+    print(filename_head)
     # print(df.columns)
     # 直近の最高値、最安値
-    df["h_line"] = df["High"].rolling(20, min_periods=1).max()
-    df["l_line"] = df["Low"].rolling(20, min_periods=1).min()
-    adp = [mpf.make_addplot(df[['h_line', 'l_line']], type='step', alpha=0.2, panel=0)]
-    adp = [mpf.make_addplot(df['hl_mean'], type='line', alpha=0.5, panel=0)]
+    # df["h_line"] = df["High"].rolling(20, min_periods=1).max()
+    # df["l_line"] = df["Low"].rolling(20, min_periods=1).min()
+    # adp = [mpf.make_addplot(df[['h_line', 'l_line']], type='step', alpha=0.2, panel=0)]
+    # adp = [mpf.make_addplot(df['hl_mean'], type='line', alpha=0.5, panel=0)]
+
+    # macdの描画
+    adp= [mpf.make_addplot(df['macd'], type='line', panel=2, color='green')]
+    adp.append(mpf.make_addplot(df['macd_signal'], type='line', panel=2, color='blue'))
+    adp.append(mpf.make_addplot(df['hist'], type='bar', panel=2, color='red'))
+    adp.append(mpf.make_addplot(df['hist_diff_3mean'], type='line', panel=2, color='black'))
+    # adp.append(mpf.make_addplot(df['sign'], type='line', panel=2, color='gray'))
 
     # 移動平均とBBの設定（パネル０に描画するもの）
     column_list = df.columns
     ma_columns = [c for c in column_list if 'ma' in c]
     for c in ma_columns:
-        if 'ma' in c and 'hl' not in c and 'diff' not in c and 'continual' not in c and 'positive' not in c and 'High' not in c and 'Low' not in c:
+        if 'ma' in c and 'hl' not in c and 'diff' not in c and 'continual' not in c and 'positive' not in c and 'High' not in c and 'Low' not in c and 'macd' not in c:
             adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle='--', alpha=0.7))
         elif 'hl' in c and 'diff' not in c and 'continual' not in c:
             adp.append(mpf.make_addplot(df[c], type='line', panel=0, linestyle=':', alpha=0.5))
+
 
     # 全体のスタイル
     mc = mpf.make_marketcolors(up='#D93D4A', down='#5AFF19',
                                edge='#F2CED1', wick={'up': '#049DBF', 'down': '#D93D4A'})
     cs = mpf.make_mpf_style(marketcolors=mc, gridcolor="lightgray", rc={"font.family": plt.rcParams["font.family"][0]})
-    mpf.plot(df, type='candle', addplot=adp,figsize=(19, 12),
+    mpf.plot(df, type='candle', addplot=adp,figsize=(19, 12), volume=True,
              style=cs, savefig=full_filename, title=title, tight_layout=True)
-    print(df.columns)
+    if macd_sign4 < macd_sign3 < macd_sign2 < macd_sign1:
+        diff = calculate_average(macd_sign1, macd_sign2, macd_sign3, macd_sign4)
+        if (macd_sign2 < 0 and 0 < macd_sign1 < 1) or (macd_sign1 < 0 and 0 < (macd_sign1 + diff)):
+            filename_head = f'({str(df["Close_5ma_positive"][-1])}{str(df["Close_25ma_positive"][-1])}{str(df["Close_60ma_positive"][-1])})勢い：5ma_diff（{round(df["Close_5ma_diff_rate"][-1], 1)}） macd：{str(macd_sign4).replace("-", "▲")}→{str(macd_sign3).replace("-", "▲")}→{str(macd_sign2).replace("-", "▲")}→{str(macd_sign1).replace("-", "▲")}→【{str(round((macd_sign1 + diff), 2)).replace("-", "▲")}】、gxis経過{df["gx_is"][-1]}日、gxim経過{df["gx_im"][-1]}日【{brand.code}  {brand.name}】'
+            full_filename_buy = os.path.join(filepath_buy, filename_head + filename_tail)
+            mpf.plot(df, type='candle', addplot=adp, figsize=(19, 12), volume=True,
+                     style=cs, savefig=full_filename_buy, title=title, tight_layout=True)
+    elif macd_sign4 > macd_sign3 > macd_sign2 > macd_sign1:
+        diff = calculate_average(macd_sign1, macd_sign2, macd_sign3, macd_sign4)
+        if (macd_sign2 > 0 and 0 < macd_sign1 < 1) or (macd_sign1 > 0 and 0 > (macd_sign1 + diff)):
+            filename_head = f'({str(df["Close_5ma_positive"][-1])}{str(df["Close_25ma_positive"][-1])}{str(df["Close_60ma_positive"][-1])})勢い：5ma_diff（{round(df["Close_5ma_diff_rate"][-1], 1)}） macd：{str(macd_sign4).replace("-", "▲")}→{str(macd_sign3).replace("-", "▲")}→{str(macd_sign2).replace("-", "▲")}→{str(macd_sign1).replace("-", "▲")}→【{str(round((macd_sign1 + diff),2)).replace("-", "▲")}】、gxis経過{df["gx_is"][-1]}日、gxim経過{df["gx_im"][-1]}日【{brand.code}  {brand.name}】'
+            full_filename_sell = os.path.join(filepath_sell, filename_head + filename_tail)
+            mpf.plot(df, type='candle', addplot=adp, figsize=(19, 12), volume=True,
+                 style=cs, savefig=full_filename_sell, title=title, tight_layout=True)
     plt.clf()
     plt.close()
 # ============【ココカラ】dfに移動平均等を追加する===============
@@ -290,8 +316,14 @@ def add_stochastic(df, term=14):
     df = pd.concat([df, stochastic], axis=1)
     return df
 
+def calculate_average(A, B, C, D):
+    diff1 = A - B
+    diff2 = B - C
+    diff3 = C - D
+    average = round((diff1 + diff2 + diff3) / 3,2)
+    return average
 
-def compare_columns(df, column_a, column_b):
+def compare_columns(df, column_a, column_b, new_col_name):
     diff_values = []
     prev_diff = 0
 
@@ -318,7 +350,7 @@ def compare_columns(df, column_a, column_b):
             prev_diff = 0
         diff_values.append(diff)
 
-    df['gx'] = diff_values
+    df[new_col_name] = diff_values
     return df
 def add_bb(df, bb_period=20, bb_dev=2):
     # ボリンジャーバンドの計算
@@ -624,11 +656,8 @@ def register_brands_from_tse():
     print('DONE')
 
 
-def erazer(positive=False):
-    if positive:
-        folder_name = 'img2'
-    else:
-        folder_name = 'img'
+def erazer(folder_name):
+
     folder_path = os.path.join(os.getcwd(), 'front', 'src', 'assets', folder_name)  # フォルダのパスを設定
 
     for file_name in os.listdir(folder_path):  # フォルダ内のファイル名を取得
