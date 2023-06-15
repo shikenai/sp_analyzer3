@@ -140,6 +140,11 @@ const survey=()=>{
     console.log(temp1.value)
   })
 }
+const check =()=>{
+  axios.get('api/check').then(res=>{
+    console.log('check')
+  })
+}
 </script>
 
 <template>
@@ -151,6 +156,7 @@ const survey=()=>{
         <!--        <li><a href="" @click.prevent="registerTrades">regT</a></li>-->
         <li><a href="" @click.prevent="getNewTrades">最新の取引情報を取得</a></li>
         <li><a href="" @click.prevent="survey">新・画像生成</a></li>
+        <li><a href="" @click.prevent="check">確認</a></li>
 <!--        <li><a href="" @click.prevent="analyze">画像生成</a></li>-->
 <!--        <li><a href="" @click.prevent="show">画像表示</a></li>-->
       </ul>

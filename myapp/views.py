@@ -1,10 +1,11 @@
+import pandas as pd
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from myapp.management.commands import main
 import datetime as dt
 from django.views.decorators.csrf import csrf_exempt
 import json
-from myapp.models import Brands, Judge
+from myapp.models import Brands, Judge, Trades
 
 
 def show(request):
@@ -111,6 +112,18 @@ def survey(request):
     main.survey()
     return JsonResponse({'kind': 'trade'})
 
+
+def check(request):
+    print('check')
+    _trades = Trades.objects.all()
+    _brands = Brands.objects.filter(code='7752.jp')
+    __df = pd.DataFrame.from_records(_brands.values())
+    id = __df['id'][0]
+
+    _df = pd.DataFrame.from_records(_trades.values())
+    df = _df[_df['brand_id']==id]
+    print(df)
+    return JsonResponse({'kind': 'trade'})
 
 def home(request):
     return redirect("http://localhost:5173/")
