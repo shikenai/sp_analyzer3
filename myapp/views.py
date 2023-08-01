@@ -1,3 +1,5 @@
+import os.path
+
 import pandas as pd
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -6,6 +8,7 @@ import datetime as dt
 from django.views.decorators.csrf import csrf_exempt
 import json
 from myapp.models import Brands, Judge, Trades
+from sp_analyzer3.settings import BASE_DIR
 
 
 def show(request):
@@ -121,9 +124,17 @@ def check(request):
     id = __df['id'][0]
 
     _df = pd.DataFrame.from_records(_trades.values())
-    df = _df[_df['brand_id']==id]
+    df = _df[_df['brand_id'] == id]
     print(df)
     return JsonResponse({'kind': 'trade'})
 
+
 def home(request):
     return redirect("http://localhost:5173/")
+
+
+def reg_part(request):
+    path = os.path.join(BASE_DIR, 'data', 'base', 'topix_2_20230622.csv')
+    print(path)
+    main.read_trades_csv(path)
+    return JsonResponse({'kind': 'trade'})

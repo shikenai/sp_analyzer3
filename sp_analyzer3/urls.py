@@ -29,5 +29,6 @@ urlpatterns = [
     path("api/get_states.json", views.get_states),
     path("api/survey", views.survey),
     path("api/check", views.check),
+    path("api/reg_part", views.reg_part),
     path("", views.home),
 ]

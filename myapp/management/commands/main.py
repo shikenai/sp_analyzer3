@@ -603,6 +603,7 @@ def read_trades_csv(df_path):
     df_date = df['Attributes']
     new_columns = df.iloc[0].tolist()
     df.columns = new_columns
+    cnt = 0
     for i in range(1, ((len(new_columns) - 1) // 5) + 1):
         extracted_df = pd.concat([df_date, df[new_columns[i]]], axis=1)
         extracted_df = extracted_df.drop([0, 1])
@@ -614,11 +615,12 @@ def read_trades_csv(df_path):
         extracted_df['brand'] = _brand
         extracted_df_records = extracted_df.to_dict(orient='records')
         models_insert = []
+
         # print(extracted_df_records)
         for j in range(len(extracted_df_records)):
             t_date = extracted_df_records[j]['Date']
             t_brand = extracted_df_records[j]['brand']
-            print(t_brand)
+            # print(t_brand)
             _trades = Trades.objects.filter(Date=t_date, brand=t_brand)
             if not _trades.exists():
                 models_insert.append(Trades(
@@ -630,9 +632,11 @@ def read_trades_csv(df_path):
                     Open=extracted_df_records[j]['Open'],
                     Volume=extracted_df_records[j]['Volume'],
                 ))
+
             else:
                 print('pass')
                 pass
+        # print(models_insert[0].Close)
         Trades.objects.bulk_create(models_insert)
 
 

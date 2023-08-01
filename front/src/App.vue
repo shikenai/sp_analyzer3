@@ -145,6 +145,11 @@ const check =()=>{
     console.log('check')
   })
 }
+const reg_part =()=>{
+  axios.get('api/reg_part').then(res=>{
+    console.log('reg_part')
+  })
+}
 </script>
 
 <template>
@@ -157,6 +162,7 @@ const check =()=>{
         <li><a href="" @click.prevent="getNewTrades">最新の取引情報を取得</a></li>
         <li><a href="" @click.prevent="survey">新・画像生成</a></li>
         <li><a href="" @click.prevent="check">確認</a></li>
+        <li><a href="" @click.prevent="reg_part">部分的にトレード登録</a></li>
 <!--        <li><a href="" @click.prevent="analyze">画像生成</a></li>-->
 <!--        <li><a href="" @click.prevent="show">画像表示</a></li>-->
       </ul>
